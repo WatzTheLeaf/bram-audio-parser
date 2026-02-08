@@ -1,0 +1,9 @@
+[package]
+name = "bram-audio-parser"
+version = "1.0.0"
+edition = "2024"
+authors = ["WatzTheleaf <watztheleaf@pm.me>"]
+description = "Audio file parser used in a gamedev project"
+license = "MIT"
+
+[dependencies]
