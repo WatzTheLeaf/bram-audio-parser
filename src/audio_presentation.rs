@@ -3,8 +3,8 @@ use crate::audio_data::AudioData;
 
 #[derive(Debug)]
 pub struct StereoAudioPresentation {
-    pub first_canal_points: Vec<f32>,
-    pub second_canal_points: Vec<f32>,
+    pub left_channel_points: Vec<f32>,
+    pub right_channel_points: Vec<f32>,
 }
 
 pub(crate) struct RatedAudioData {
@@ -34,8 +34,8 @@ impl TryFrom<&RatedAudioData> for StereoAudioPresentation {
         let samples_per_interval = samples.sample_rate / rated_audio_data.sample_rate;
         let total_frames = samples.samples.len() / samples.channels as usize;
         let num_points = (total_frames + samples_per_interval as usize - 1) / samples_per_interval as usize;
-        let mut first_canal_points = Vec::with_capacity(num_points);
-        let mut second_canal_points = Vec::with_capacity(num_points);
+        let mut left_channel_points = Vec::with_capacity(num_points);
+        let mut right_channel_points = Vec::with_capacity(num_points);
         let mut frame_index = 0;
         while frame_index < total_frames {
             let sample_index = frame_index * samples.channels as usize;
@@ -51,14 +51,14 @@ impl TryFrom<&RatedAudioData> for StereoAudioPresentation {
             let first_normalized = (first_sample as f32 + 32768.0) / 65535.0;
             let second_normalized = (second_sample as f32 + 32768.0) / 65535.0;
 
-            first_canal_points.push(first_normalized);
-            second_canal_points.push(second_normalized);
+            left_channel_points.push(first_normalized);
+            right_channel_points.push(second_normalized);
 
             frame_index += samples_per_interval as usize;
         }
         Ok(StereoAudioPresentation {
-            first_canal_points,
-            second_canal_points,
+            left_channel_points,
+            right_channel_points,
         })
     }
 }
@@ -80,10 +80,10 @@ mod audio_presentation_tests {
         let result = StereoAudioPresentation::try_from(&rated_audio_data);
         assert!(result.is_ok());
         let presentation = result.unwrap();
-        assert_eq!(presentation.first_canal_points.len(), 2);
-        assert_eq!(presentation.second_canal_points.len(), 2);
-        assert!((presentation.first_canal_points[0] - 0.5).abs() < 0.001);
-        assert!((presentation.second_canal_points[0] - 0.5).abs() < 0.001);
+        assert_eq!(presentation.left_channel_points.len(), 2);
+        assert_eq!(presentation.right_channel_points.len(), 2);
+        assert!((presentation.left_channel_points[0] - 0.5).abs() < 0.001);
+        assert!((presentation.right_channel_points[0] - 0.5).abs() < 0.001);
     }
 
     #[test]
@@ -97,10 +97,10 @@ mod audio_presentation_tests {
         let result = StereoAudioPresentation::try_from(&rated_audio_data);
         assert!(result.is_ok());
         let presentation = result.unwrap();
-        assert_eq!(presentation.first_canal_points.len(), 4);
-        assert_eq!(presentation.second_canal_points.len(), 4);
-        assert!((presentation.first_canal_points[0] - 0.5).abs() < 0.001);
-        assert!((presentation.second_canal_points[0] - 0.5).abs() < 0.001);
+        assert_eq!(presentation.left_channel_points.len(), 4);
+        assert_eq!(presentation.right_channel_points.len(), 4);
+        assert!((presentation.left_channel_points[0] - 0.5).abs() < 0.001);
+        assert!((presentation.right_channel_points[0] - 0.5).abs() < 0.001);
     }
 
     #[test]

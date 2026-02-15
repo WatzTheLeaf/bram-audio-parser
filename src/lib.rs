@@ -7,7 +7,7 @@ mod wav_binary;
 mod audio_data;
 mod audio_presentation;
 
-pub fn load_audio_presentation(path: &str, rate: u32) -> io::Result<StereoAudioPresentation> {
+pub fn load_presentation(path: &str, rate: u32) -> io::Result<StereoAudioPresentation> {
     let wavbin = WavBinary::from_file(path)?;
     let audiodata = AudioData::try_from(&wavbin)?;
     let ratedaudiodata = RatedAudioData::new(&audiodata, rate);
