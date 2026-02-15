@@ -2,7 +2,7 @@ use std::io;
 use std::io::{Error, ErrorKind};
 use crate::wav_binary::WavBinary;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub(crate) struct AudioData {
     pub samples: Vec<i16>,
     pub channels: u16,

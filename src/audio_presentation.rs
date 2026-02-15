@@ -7,17 +7,31 @@ pub struct StereoAudioPresentation {
     pub second_canal_points: Vec<f32>,
 }
 
-impl TryFrom<&AudioData> for StereoAudioPresentation {
+pub(crate) struct RatedAudioData {
+    pub audio_data: AudioData,
+    pub sample_rate: u32,
+}
+
+impl RatedAudioData {
+    pub(crate) fn new(audio_data: &AudioData, sample_rate: u32) -> Self {
+        Self {
+            audio_data: audio_data.clone(), sample_rate
+        }
+    }
+}
+
+impl TryFrom<&RatedAudioData> for StereoAudioPresentation {
     type Error = Error;
 
-    fn try_from(samples: &AudioData) -> Result<Self, Self::Error> {
+    fn try_from(rated_audio_data: &RatedAudioData) -> Result<Self, Self::Error> {
+        let samples = &rated_audio_data.audio_data;
         if samples.channels != 1 && samples.channels != 2 {
             return Err(Error::new(
                 ErrorKind::InvalidData,
                 "only mono or stereo audio is supported"
             ));
         }
-        let samples_per_interval = samples.sample_rate / 5;
+        let samples_per_interval = samples.sample_rate / rated_audio_data.sample_rate;
         let total_frames = samples.samples.len() / samples.channels as usize;
         let num_points = (total_frames + samples_per_interval as usize - 1) / samples_per_interval as usize;
         let mut first_canal_points = Vec::with_capacity(num_points);
@@ -53,7 +67,7 @@ impl TryFrom<&AudioData> for StereoAudioPresentation {
 mod audio_presentation_tests {
     use std::io::ErrorKind;
     use crate::audio_data::AudioData;
-    use crate::audio_presentation::StereoAudioPresentation;
+    use crate::audio_presentation::{RatedAudioData, StereoAudioPresentation};
 
     #[test]
     fn create_audio_presentation_from_audiodata_stereo() {
@@ -62,7 +76,8 @@ mod audio_presentation_tests {
             channels: 2,
             sample_rate: 10,
         };
-        let result = StereoAudioPresentation::try_from(&audio_data);
+        let rated_audio_data = RatedAudioData {audio_data, sample_rate: 5};
+        let result = StereoAudioPresentation::try_from(&rated_audio_data);
         assert!(result.is_ok());
         let presentation = result.unwrap();
         assert_eq!(presentation.first_canal_points.len(), 2);
@@ -78,7 +93,8 @@ mod audio_presentation_tests {
             channels: 1,
             sample_rate: 10
         };
-        let result = StereoAudioPresentation::try_from(&audio_data);
+        let rated_audio_data = RatedAudioData {audio_data, sample_rate: 5};
+        let result = StereoAudioPresentation::try_from(&rated_audio_data);
         assert!(result.is_ok());
         let presentation = result.unwrap();
         assert_eq!(presentation.first_canal_points.len(), 4);
@@ -94,7 +110,8 @@ mod audio_presentation_tests {
             channels: 3,
             sample_rate: 10,
         };
-        let result = StereoAudioPresentation::try_from(&audio_data);
+        let rated_audio_data = RatedAudioData {audio_data, sample_rate: 5};
+        let result = StereoAudioPresentation::try_from(&rated_audio_data);
         assert!(result.is_err());
         assert_eq!(result.unwrap_err().kind(), ErrorKind::InvalidData);
     }
